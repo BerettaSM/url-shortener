@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: urlshortener
+  data:
+    redis:
+      database: 0
+      host: localhost
+      password: secret
+      port: 6379
