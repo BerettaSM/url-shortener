@@ -1,4 +1,4 @@
-package com.ramon.urlshortener;
+package com.ramon.urlshortener.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +8,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "null" })
 @Configuration
 @EnableRedisRepositories
 public class ApplicationConfig {
