@@ -2,7 +2,6 @@ package com.ramon.urlshortener.repositories;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,11 +12,12 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.lang.NonNull;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
 
 import com.ramon.urlshortener.domain.entities.ShortenedUrl;
 import com.ramon.urlshortener.exceptions.DatabaseException;
+import com.ramon.urlshortener.services.ShorteningService;
 
 @Repository
 public class RedisShortenedUrlRepository implements ShortenedUrlRepository {
@@ -25,10 +25,18 @@ public class RedisShortenedUrlRepository implements ShortenedUrlRepository {
     private static final String URL_KEY_PREFIX = "urls";
 
     private final StringRedisTemplate redisTemplate;
+    private final RedisScript<Boolean> setHashIfNotExistsScript;
     private final HashOperations<String, String, String> hashOperations;
 
-    public RedisShortenedUrlRepository(StringRedisTemplate redisTemplate) {
+    private final ShorteningService shorteningService;
+
+    public RedisShortenedUrlRepository(
+            StringRedisTemplate redisTemplate,
+            ShorteningService shorteningService,
+            RedisScript<Boolean> setHashIfNotExistsScript) {
         this.redisTemplate = redisTemplate;
+        this.shorteningService = shorteningService;
+        this.setHashIfNotExistsScript = setHashIfNotExistsScript;
         hashOperations = redisTemplate.opsForHash();
     }
 
@@ -59,10 +67,15 @@ public class RedisShortenedUrlRepository implements ShortenedUrlRepository {
     }
 
     @Override
-    public void save(ShortenedUrl shortenedUrl) {
-        String urlKey = getKey(shortenedUrl);
-        Map<String, String> transactionMap = toMap(shortenedUrl);
-        hashOperations.putAll(urlKey, transactionMap);
+    public ShortenedUrl save(ShortenedUrl shortenedUrl) {
+        String shortening, args[];
+        ShortenedUrl saveCandidate = copy(shortenedUrl);
+        do {
+            shortening = shorteningService.generateShortening();
+            saveCandidate.setId(shortening);
+            args = toVarArgs(saveCandidate);
+        } while (!saveShorteningIfIdNotExists(getKey(shortening), args));
+        return saveCandidate;
     }
 
     @Override
@@ -71,7 +84,19 @@ public class RedisShortenedUrlRepository implements ShortenedUrlRepository {
         hashOperations.delete(urlKey, "id", "url", "expiryMoment");
     }
 
-    private static @NonNull ShortenedUrl toShortenedUrl(Map<String, String> map) {
+    private boolean saveShorteningIfIdNotExists(String id, String[] args) {
+        return redisTemplate.<Boolean>execute(setHashIfNotExistsScript, List.of(id), (Object[]) args);
+    }
+
+    private static String[] toVarArgs(ShortenedUrl shortenedUrl) {
+        return new String[] {
+                "id", shortenedUrl.getId(),
+                "url", shortenedUrl.getUrl(),
+                "expiryMoment", shortenedUrl.getExpiryMoment().toString()
+        };
+    }
+
+    private static ShortenedUrl toShortenedUrl(Map<String, String> map) {
         try {
             String id = map.get("id");
             String url = map.get("url");
@@ -82,19 +107,15 @@ public class RedisShortenedUrlRepository implements ShortenedUrlRepository {
         }
     }
 
-    private static @NonNull Map<String, String> toMap(ShortenedUrl shortenedUrl) {
-        Map<String, String> transactionMap = new HashMap<>();
-        transactionMap.put("id", shortenedUrl.getId());
-        transactionMap.put("url", shortenedUrl.getUrl());
-        transactionMap.put("expiryMoment", shortenedUrl.getExpiryMoment().toString());
-        return transactionMap;
+    private static ShortenedUrl copy(ShortenedUrl target) {
+        ShortenedUrl shortenedUrl = new ShortenedUrl();
+        shortenedUrl.setId(target.getId());
+        shortenedUrl.setUrl(target.getUrl());
+        shortenedUrl.setExpiryMoment(target.getExpiryMoment());
+        return shortenedUrl;
     }
 
-    private static @NonNull String getKey(ShortenedUrl shortenedUrl) {
-        return getKey(shortenedUrl.getId());
-    }
-
-    private static @NonNull String getKey(String shortenedUrlId) {
+    private static String getKey(String shortenedUrlId) {
         return URL_KEY_PREFIX + ":" + shortenedUrlId;
     }
 
