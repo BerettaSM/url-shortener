@@ -1,7 +1,13 @@
 package com.ramon.urlshortener.controllers;
 
+import java.net.URI;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,4 +30,13 @@ public class ShortenedUrlController {
         return ResponseEntity.ok(saved);
     }
 
+    @GetMapping("/{shortening}")
+    public ResponseEntity<Void> getMethodName(@PathVariable String shortening) {
+        ShortenedUrlDTO shortenedUrl = urlShortenerService.findByShortening(shortening);
+        HttpHeaders headers = new HttpHeaders();
+        URI location = URI.create(shortenedUrl.getUrl());
+        headers.setLocation(location);
+        return ResponseEntity.status(HttpStatus.SEE_OTHER).headers(headers).build();
+    }
+    
 }

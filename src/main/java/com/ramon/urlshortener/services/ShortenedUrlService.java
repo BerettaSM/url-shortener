@@ -18,6 +18,12 @@ public class ShortenedUrlService {
 
     private final ShortenedUrlRepository shortenedUrlRepository;
 
+    public ShortenedUrlDTO findByShortening(String shortening) {
+        return shortenedUrlRepository.findById(shortening)
+            .map(su -> new ShortenedUrlDTO(su.getUrl()))
+            .orElseThrow(() -> new RuntimeException("Url not found"));
+    }
+
     public ShortenedUrlDTO save(ShortenedUrlDTO dto) {
         ShortenedUrl shortenedUrl = new ShortenedUrl();
         shortenedUrl.setUrl(dto.getUrl());
