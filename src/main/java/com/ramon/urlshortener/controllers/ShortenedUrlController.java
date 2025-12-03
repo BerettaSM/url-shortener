@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ramon.urlshortener.domain.dtos.ShortenedUrlDTO;
 import com.ramon.urlshortener.services.ShortenedUrlService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
@@ -25,7 +26,7 @@ public class ShortenedUrlController {
     private final ShortenedUrlService urlShortenerService;
 
     @PostMapping("/shorten-url")
-    public ResponseEntity<ShortenedUrlDTO> shortenUrl(@RequestBody ShortenedUrlDTO dto) {
+    public ResponseEntity<ShortenedUrlDTO> shortenUrl(@RequestBody @Valid ShortenedUrlDTO dto) {
         ShortenedUrlDTO saved = urlShortenerService.save(dto);
         return ResponseEntity.ok(saved);
     }
