@@ -84,6 +84,14 @@ public class RedisShortenedUrlRepository implements ShortenedUrlRepository {
         hashOperations.delete(urlKey, "id", "url", "expiryMoment");
     }
 
+    @Override
+    public void deleteAllById(List<String> ids) {
+        redisTemplate.delete(
+                ids.stream()
+                        .map(RedisShortenedUrlRepository::getKey)
+                        .toList());
+    }
+
     private boolean saveShorteningIfIdNotExists(String id, String[] args) {
         return redisTemplate.<Boolean>execute(setHashIfNotExistsScript, List.of(id), (Object[]) args);
     }

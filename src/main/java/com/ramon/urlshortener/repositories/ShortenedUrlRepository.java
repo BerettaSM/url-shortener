@@ -14,5 +14,7 @@ public interface ShortenedUrlRepository {
     ShortenedUrl save(ShortenedUrl shortenedUrl);
 
     void deleteById(String shortenedUrlId);
-    
+
+    void deleteAllById(List<String> ids);
+
 }

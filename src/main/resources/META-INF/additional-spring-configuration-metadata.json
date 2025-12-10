@@ -1,0 +1,5 @@
+{"properties": [{
+  "name": "custom.url.expiry-in-seconds",
+  "type": "java.lang.Integer",
+  "description": "How long, in seconds, an url takes to expire."
+}]}

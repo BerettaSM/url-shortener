@@ -14,5 +14,9 @@ public class ShortenedUrl {
     private String id;
     private String url;
     private Instant expiryMoment;
-    
+
+    public boolean isExpired() {
+        return expiryMoment.isBefore(Instant.now());
+    }
+
 }

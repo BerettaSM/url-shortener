@@ -1,3 +1,6 @@
+custom:
+  url:
+    expiryInSeconds: 300
 spring:
   application:
     name: urlshortener

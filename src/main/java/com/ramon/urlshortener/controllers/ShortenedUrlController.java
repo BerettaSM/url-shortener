@@ -32,7 +32,7 @@ public class ShortenedUrlController {
     }
 
     @GetMapping("/{shortening}")
-    public ResponseEntity<Void> getMethodName(@PathVariable String shortening) {
+    public ResponseEntity<Void> redirect(@PathVariable String shortening) {
         ShortenedUrlDTO shortenedUrl = urlShortenerService.findByShortening(shortening);
         HttpHeaders headers = new HttpHeaders();
         URI location = URI.create(shortenedUrl.getUrl());
