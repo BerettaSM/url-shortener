@@ -9,6 +9,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.ramon.urlshortener.domain.dtos.ShortenedUrlDTO;
 import com.ramon.urlshortener.domain.entities.ShortenedUrl;
+import com.ramon.urlshortener.exceptions.ResourceNotFoundException;
 import com.ramon.urlshortener.repositories.ShortenedUrlRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class ShortenedUrlService {
     public ShortenedUrlDTO findByShortening(String shortening) {
         return shortenedUrlRepository.findById(shortening)
                 .map(su -> new ShortenedUrlDTO(su.getUrl()))
-                .orElseThrow(() -> new RuntimeException("Url not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Url not found"));
     }
 
     public ShortenedUrlDTO save(ShortenedUrlDTO dto) {
